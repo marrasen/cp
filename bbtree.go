@@ -1,6 +1,9 @@
 package cp
 
-import "math"
+import (
+	"log"
+	"math"
+)
 
 type BBTreeVelocityFunc func(obj interface{}) Vector
 
@@ -171,6 +174,10 @@ func (leaf *Node) MarkLeaf(context *MarkContext) {
 	}
 }
 func (subtree *Node) MarkLeafQuery(leaf *Node, left bool, context *MarkContext) {
+	if subtree == nil {
+		log.Println("MarkLeafQuery: subtree is nil, possible bug.")
+		return
+	}
 	if leaf.bb.Intersects(subtree.bb) {
 		if subtree.IsLeaf() {
 			if left {
