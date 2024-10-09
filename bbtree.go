@@ -137,7 +137,7 @@ func (tree *BBTree) LeafAddPairs(leaf *Node) {
 		if dynamicRoot != nil {
 			dynamicTree := dynamicIndex.GetTree()
 			context := &MarkContext{dynamicTree, nil, nil, nil}
-			dynamicRoot.MarkLeafQuery(leaf, true, context, 0)
+			dynamicRoot.MarkLeafQuery(leaf, true, context)
 		}
 	} else {
 		staticRoot := tree.spatialIndex.staticIndex.GetRootIfTree()
@@ -151,14 +151,14 @@ func (leaf *Node) MarkLeaf(context *MarkContext) {
 	if leaf.stamp == tree.GetMasterTree().stamp {
 		staticRoot := context.staticRoot
 		if staticRoot != nil {
-			staticRoot.MarkLeafQuery(leaf, false, context, 0)
+			staticRoot.MarkLeafQuery(leaf, false, context)
 		}
 
 		for node := leaf; node.parent != nil; node = node.parent {
 			if node == node.parent.a {
-				node.parent.b.MarkLeafQuery(leaf, true, context, 0)
+				node.parent.b.MarkLeafQuery(leaf, true, context)
 			} else {
-				node.parent.a.MarkLeafQuery(leaf, false, context, 0)
+				node.parent.a.MarkLeafQuery(leaf, false, context)
 			}
 		}
 	} else {
@@ -173,13 +173,9 @@ func (leaf *Node) MarkLeaf(context *MarkContext) {
 		}
 	}
 }
-func (subtree *Node) MarkLeafQuery(leaf *Node, left bool, context *MarkContext, stackCount int) {
+func (subtree *Node) MarkLeafQuery(leaf *Node, left bool, context *MarkContext) {
 	if subtree == nil {
 		log.Println("MarkLeafQuery: subtree is nil, possible bug.")
-		return
-	}
-	if stackCount > 10000 {
-		log.Println("MarkLeafQuery: stackCount > 10000, possible bug.")
 		return
 	}
 	if leaf.bb.Intersects(subtree.bb) {
@@ -193,8 +189,8 @@ func (subtree *Node) MarkLeafQuery(leaf *Node, left bool, context *MarkContext, 
 				context.f(leaf.obj, subtree.obj, 0, context.data)
 			}
 		} else {
-			subtree.a.MarkLeafQuery(leaf, left, context, stackCount+1)
-			subtree.b.MarkLeafQuery(leaf, left, context, stackCount+1)
+			subtree.a.MarkLeafQuery(leaf, left, context)
+			subtree.b.MarkLeafQuery(leaf, left, context)
 		}
 	}
 }
