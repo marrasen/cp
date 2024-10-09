@@ -2,7 +2,6 @@ package cp
 
 import (
 	"fmt"
-	"log"
 	"math"
 )
 
@@ -579,7 +578,6 @@ func (body *Body) SetPositionUpdateFunc(f BodyPositionFunc) {
 
 // EachArbiter calls f once for each arbiter that is currently active on the body.
 func (body *Body) EachArbiter(f func(*Arbiter)) {
-	escapeCounter := 0
 	arb := body.arbiterList
 	for arb != nil {
 		next := arb.Next(body)
@@ -590,11 +588,6 @@ func (body *Body) EachArbiter(f func(*Arbiter)) {
 
 		arb.swapped = swapped
 		arb = next
-		escapeCounter++
-		if escapeCounter > 1000 {
-			log.Println("Arbiter list is circular")
-			return
-		}
 	}
 }
 
