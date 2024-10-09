@@ -677,7 +677,7 @@ func ArbiterNext(arb *Arbiter, body *Body) *Arbiter {
 }
 
 func (space *Space) appendArbiter(arb *Arbiter) {
-	if _, ok := space.arbitersMap[arb]; !ok {
+	if _, ok := space.arbitersMap[arb]; ok {
 		log.Println("Arbiter already in list")
 		return
 	}
