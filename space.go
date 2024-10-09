@@ -1,6 +1,7 @@
 package cp
 
 import (
+	"log"
 	"math"
 	"sync"
 	"unsafe"
@@ -37,6 +38,7 @@ type Space struct {
 	constraints []*Constraint
 
 	arbiters           []*Arbiter
+	arbitersMap        map[*Arbiter]struct{}
 	contactBuffersHead *ContactBuffer
 	cachedArbiters     *HashSet[ShapePair, *Arbiter]
 	pooledArbiters     sync.Pool
@@ -79,6 +81,7 @@ func NewSpace() *Space {
 		SleepTimeThreshold:   math.MaxFloat64,
 		IdleSpeedThreshold:   0.0,
 		arbiters:             []*Arbiter{},
+		arbitersMap:          make(map[*Arbiter]struct{}),
 		cachedArbiters:       NewHashSet[ShapePair, *Arbiter](arbiterSetEql),
 		pooledArbiters:       sync.Pool{New: func() interface{} { return &Arbiter{} }},
 		constraints:          []*Constraint{},
@@ -190,7 +193,7 @@ func (space *Space) Activate(body *Body) {
 
 			// update arbiters state
 			arbiter.stamp = space.stamp
-			space.arbiters = append(space.arbiters, arbiter)
+			space.appendArbiter(arbiter)
 		}
 	}
 
@@ -462,7 +465,7 @@ func SpaceCollideShapesFunc(obj interface{}, b *Shape, collisionId uint32, vspac
 		// Don't process collisions between two infinite mass bodies.
 		// This includes collisions between two kinematic bodies, or a kinematic body and a static body.
 		!(a.body.m == INFINITY && b.body.m == INFINITY) {
-		space.arbiters = append(space.arbiters, arb)
+		space.appendArbiter(arb)
 	} else {
 		space.PopContacts(info.count)
 		arb.contacts = nil
@@ -673,6 +676,15 @@ func ArbiterNext(arb *Arbiter, body *Body) *Arbiter {
 	return arb.thread_b.next
 }
 
+func (space *Space) appendArbiter(arb *Arbiter) {
+	if _, ok := space.arbitersMap[arb]; !ok {
+		log.Println("Arbiter already in list")
+		return
+	}
+	space.arbiters = append(space.arbiters, arb)
+	space.arbitersMap[arb] = struct{}{}
+}
+
 func (space *Space) Step(dt float64) {
 	if dt == 0 {
 		return
@@ -693,6 +705,7 @@ func (space *Space) Step(dt float64) {
 		}
 	}
 	space.arbiters = space.arbiters[:0]
+	space.arbitersMap = make(map[*Arbiter]struct{})
 
 	space.Lock()
 	{
@@ -833,6 +846,7 @@ func (space *Space) UncacheArbiter(arb *Arbiter) {
 			space.arbiters[i] = space.arbiters[last]
 			space.arbiters[last] = nil
 			space.arbiters = space.arbiters[:last]
+			delete(space.arbitersMap, arb)
 			return
 		}
 	}
