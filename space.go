@@ -1,7 +1,6 @@
 package cp
 
 import (
-	"log"
 	"math"
 	"sync"
 	"unsafe"
@@ -164,7 +163,6 @@ func (space *Space) Activate(body *Body) {
 		space.dynamicShapes.class.Insert(shape, shape.hashid)
 	}
 
-	escapeCounter := 0
 	for arbiter := body.arbiterList; arbiter != nil; arbiter = arbiter.Next(body) {
 		bodyA := arbiter.body_a
 
@@ -193,11 +191,6 @@ func (space *Space) Activate(body *Body) {
 			// update arbiters state
 			arbiter.stamp = space.stamp
 			space.arbiters = append(space.arbiters, arbiter)
-		}
-		escapeCounter++
-		if escapeCounter > 1000 {
-			log.Println("Escape counter is too high. This is probably due to a bug in chipmunk. (space.Activate)")
-			break
 		}
 	}
 

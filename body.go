@@ -404,7 +404,6 @@ func (body *Body) Activate() {
 		}
 	}
 
-	escapeCounter := 0
 	for arbiter := body.arbiterList; arbiter != nil; arbiter = arbiter.Next(body) {
 		// Reset the idle timer of things the body is touching as well.
 		// That way things don't get left hanging in the air.
@@ -417,12 +416,6 @@ func (body *Body) Activate() {
 		if other.GetType() != BODY_STATIC {
 			other.sleepingIdleTime = 0
 		}
-
-		escapeCounter++
-		if escapeCounter > 1000 {
-			log.Println("Arbiter escape counter exceeded. This is probably a bug in Chipmunk. (body.Activate)")
-			break
-		}
 	}
 }
 
@@ -430,7 +423,6 @@ func (body *Body) Activate() {
 func (body *Body) ActivateStatic(filter *Shape) {
 	assert(body.GetType() == BODY_STATIC)
 
-	escapeCounter := 0
 	for arb := body.arbiterList; arb != nil; arb = arb.Next(body) {
 		if filter == nil || filter == arb.a || filter == arb.b {
 			if arb.body_a == body {
@@ -438,11 +430,6 @@ func (body *Body) ActivateStatic(filter *Shape) {
 			} else {
 				arb.body_a.Activate()
 			}
-		}
-		escapeCounter++
-		if escapeCounter > 1000 {
-			log.Println("Arbiter escape counter exceeded. This is probably a bug in Chipmunk. (body.ActivateStatic)")
-			break
 		}
 	}
 }
@@ -605,8 +592,8 @@ func (body *Body) EachArbiter(f func(*Arbiter)) {
 		arb = next
 		escapeCounter++
 		if escapeCounter > 1000 {
-			log.Println("Arbiter escape counter exceeded. This is probably a bug in Chipmunk. (body.EachArbiter)")
-			break
+			log.Println("Arbiter list is circular")
+			return
 		}
 	}
 }
